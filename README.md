@@ -8,8 +8,8 @@ When a finger is lifted and placed back down after reaching the edge of the scre
 **Important limitation:** this cannot keep a real finger touch alive after the finger leaves the screen, and it cannot guarantee that Evade's trimp momentum will be preserved. Roblox's touch lifecycle is controlled by the client; changing a `Touch` boolean does not synthesize a continuous physical touch. This is a test, not a confirmed fix.
 
 ## Install / run
-1. Open `EvadeTouchContinuity.lua`.
-2. Copy the full file into Delta and execute it **separately** from your camera sensitivity script.
+1. To use the loader, copy the contents of [`Loader.lua`](Loader.lua) into Delta and execute it.
+2. Or copy `EvadeTouchContinuity.lua` directly into Delta. Run it **separately** from your camera sensitivity script.
 3. Test in a private/low-risk session, with the same camera settings you normally use.
 4. To stop it, use the on-screen **STOP** button. Rejoining the game also clears the hooks.
 
