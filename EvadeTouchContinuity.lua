@@ -122,7 +122,7 @@ local function attachHook()
     return true
 end
 
--- Small, movable-enough status panel with a stop button.
+-- Compact status panel with a stop button only; no report UI.
 local gui
 pcall(function()
     gui = Instance.new("ScreenGui")
@@ -133,7 +133,7 @@ pcall(function()
 
     local frame = Instance.new("Frame")
     frame.Name = "Panel"
-    frame.Size = UDim2.fromOffset(230, 100)
+    frame.Size = UDim2.fromOffset(230, 68)
     frame.Position = UDim2.new(0.5, -115, 0.72, 0)
     frame.BackgroundColor3 = Color3.fromRGB(25, 25, 28)
     frame.BackgroundTransparency = 0.12
@@ -155,8 +155,8 @@ pcall(function()
     label.Parent = frame
 
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.5, -12, 0, 29)
-    button.Position = UDim2.fromOffset(8, 34)
+    button.Size = UDim2.new(1, -16, 0, 29)
+    button.Position = UDim2.fromOffset(8, 32)
     button.BackgroundColor3 = Color3.fromRGB(150, 45, 45)
     button.BorderSizePixel = 0
     button.Text = "STOP"
@@ -169,55 +169,6 @@ pcall(function()
     bc.CornerRadius = UDim.new(0, 7)
     bc.Parent = button
 
-    local copyButton = Instance.new("TextButton")
-    copyButton.Name = "CopyReport"
-    copyButton.Size = UDim2.new(0.5, -12, 0, 29)
-    copyButton.Position = UDim2.new(0.5, 4, 0, 34)
-    copyButton.BackgroundColor3 = Color3.fromRGB(45, 95, 150)
-    copyButton.BorderSizePixel = 0
-    copyButton.Text = "COPIAR RELATÓRIO"
-    copyButton.TextColor3 = Color3.new(1, 1, 1)
-    copyButton.TextSize = 11
-    copyButton.Font = Enum.Font.GothamBold
-    copyButton.Parent = frame
-
-    local cc = Instance.new("UICorner")
-    cc.CornerRadius = UDim.new(0, 7)
-    cc.Parent = copyButton
-
-    copyButton.Activated:Connect(function()
-        local report = table.concat({
-            "EvadeTouchContinuity - Relatório",
-            "Versão: experimental",
-            "Hook instalado: " .. tostring(hooked),
-            "Script ativo: " .. tostring(enabled),
-            "Toque ativo no momento: " .. tostring(touchActive),
-            "Modo: suprime apenas a primeira amostra de rotação não-zero após retocar",
-            "Amostras suprimidas: " .. tostring(suppressedDeltaCount),
-            "Magnitude da última amostra suprimida: " .. tostring(lastSuppressedMagnitude),
-            "Proteção armada para próximo delta: " .. tostring(suppressFirstDelta),
-            "Observação: teste experimental; não altera a sensibilidade nem garante preservar o momentum do trimp."
-        }, "\\n")
-
-        local copied = false
-        if type(setclipboard) == "function" then
-            copied = pcall(setclipboard, report)
-        elseif type(toclipboard) == "function" then
-            copied = pcall(toclipboard, report)
-        end
-
-        if copied then
-            copyButton.Text = "RELATÓRIO COPIADO!"
-        else
-            copyButton.Text = "CLIPBOARD INDISPONÍVEL"
-            warn("[EvadeTouchContinuity] Não foi possível copiar. Relatório abaixo:\\n" .. report)
-        end
-        task.delay(2, function()
-            if copyButton and copyButton.Parent then
-                copyButton.Text = "COPIAR RELATÓRIO"
-            end
-        end)
-    end)
 
     button.Activated:Connect(function()
         if _G.EvadeTouchContinuity_Stop then
