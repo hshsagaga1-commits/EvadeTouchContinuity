@@ -8,7 +8,6 @@ end
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 if not player then
@@ -28,8 +27,6 @@ local EASE_SECONDS = 0.12 -- time to ease camera rotation back in
 local MIN_SCALE = 0.15   -- keep a little response instead of freezing the camera
 local hooked = false
 local originalGetRotation
-local cameraInputTable
-local hookWrapper
 
 local function log(...)
     print("[EvadeTouchContinuity]", ...)
@@ -90,12 +87,12 @@ local function attachHook()
         return false
     end
 
-    cameraInputTable = module
-    originalGetRotation = module.getRotation
+    local targetFunction = module.getRotation
+    local oldFunction
 
     local success, err = pcall(function()
-        hookWrapper = hookfunction(originalGetRotation, function(...)
-            local results = table.pack(originalGetRotation(...))
+        oldFunction = hookfunction(targetFunction, function(...)
+            local results = table.pack(oldFunction(...))
             if enabled and touchActive then
                 local delta = results[1]
                 if typeof(delta) == "Vector2" then
