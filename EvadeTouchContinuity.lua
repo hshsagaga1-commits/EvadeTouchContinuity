@@ -129,8 +129,8 @@ pcall(function()
 
     local frame = Instance.new("Frame")
     frame.Name = "Panel"
-    frame.Size = UDim2.fromOffset(210, 64)
-    frame.Position = UDim2.new(0.5, -105, 0.78, 0)
+    frame.Size = UDim2.fromOffset(230, 100)
+    frame.Position = UDim2.new(0.5, -115, 0.72, 0)
     frame.BackgroundColor3 = Color3.fromRGB(25, 25, 28)
     frame.BackgroundTransparency = 0.12
     frame.BorderSizePixel = 0
@@ -141,7 +141,7 @@ pcall(function()
     corner.Parent = frame
 
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -12, 0, 27)
+    label.Size = UDim2.new(1, -12, 0, 25)
     label.Position = UDim2.fromOffset(6, 2)
     label.BackgroundTransparency = 1
     label.Text = "Touch Continuity • TEST"
@@ -151,8 +151,8 @@ pcall(function()
     label.Parent = frame
 
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, -16, 0, 27)
-    button.Position = UDim2.fromOffset(8, 32)
+    button.Size = UDim2.new(0.5, -12, 0, 29)
+    button.Position = UDim2.fromOffset(8, 34)
     button.BackgroundColor3 = Color3.fromRGB(150, 45, 45)
     button.BorderSizePixel = 0
     button.Text = "STOP"
@@ -164,6 +164,54 @@ pcall(function()
     local bc = Instance.new("UICorner")
     bc.CornerRadius = UDim.new(0, 7)
     bc.Parent = button
+
+    local copyButton = Instance.new("TextButton")
+    copyButton.Name = "CopyReport"
+    copyButton.Size = UDim2.new(0.5, -12, 0, 29)
+    copyButton.Position = UDim2.new(0.5, 4, 0, 34)
+    copyButton.BackgroundColor3 = Color3.fromRGB(45, 95, 150)
+    copyButton.BorderSizePixel = 0
+    copyButton.Text = "COPIAR RELATÓRIO"
+    copyButton.TextColor3 = Color3.new(1, 1, 1)
+    copyButton.TextSize = 11
+    copyButton.Font = Enum.Font.GothamBold
+    copyButton.Parent = frame
+
+    local cc = Instance.new("UICorner")
+    cc.CornerRadius = UDim.new(0, 7)
+    cc.Parent = copyButton
+
+    copyButton.Activated:Connect(function()
+        local report = table.concat({
+            "EvadeTouchContinuity - Relatório",
+            "Versão: experimental",
+            "Hook instalado: " .. tostring(hooked),
+            "Script ativo: " .. tostring(enabled),
+            "Toque ativo no momento: " .. tostring(touchActive),
+            "Tempo de easing: " .. tostring(EASE_SECONDS) .. " s",
+            "Escala mínima: " .. tostring(MIN_SCALE),
+            "Observação: o script não mantém um toque físico contínuo e não garante preservar o momentum do trimp."
+        }, "\\n")
+
+        local copied = false
+        if type(setclipboard) == "function" then
+            copied = pcall(setclipboard, report)
+        elseif type(toclipboard) == "function" then
+            copied = pcall(toclipboard, report)
+        end
+
+        if copied then
+            copyButton.Text = "RELATÓRIO COPIADO!"
+        else
+            copyButton.Text = "CLIPBOARD INDISPONÍVEL"
+            warn("[EvadeTouchContinuity] Não foi possível copiar. Relatório abaixo:\\n" .. report)
+        end
+        task.delay(2, function()
+            if copyButton and copyButton.Parent then
+                copyButton.Text = "COPIAR RELATÓRIO"
+            end
+        end)
+    end)
 
     button.Activated:Connect(function()
         if _G.EvadeTouchContinuity_Stop then
