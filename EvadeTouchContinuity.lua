@@ -1,5 +1,5 @@
 -- EvadeTouchContinuity.lua
--- EXPERIMENTAL: eases camera rotation briefly after a new touch begins.
+-- EXPERIMENTAL: suppresses a suspicious first non-zero camera delta after re-touch.
 -- It does NOT synthesize/hold a physical touch and cannot guarantee trimp momentum.
 
 if not game:IsLoaded() then
@@ -22,9 +22,9 @@ end
 
 local enabled = true
 local touchActive = false
-local lastTouchStart = 0
-local EASE_SECONDS = 0.12 -- time to ease camera rotation back in
-local MIN_SCALE = 0.15   -- keep a little response instead of freezing the camera
+local suppressFirstDelta = false
+local suppressedDeltaCount = 0
+local lastSuppressedMagnitude = 0
 local hooked = false
 local originalGetRotation
 
@@ -35,7 +35,9 @@ end
 local function onTouchStarted(input, processed)
     if input and input.UserInputType == Enum.UserInputType.Touch then
         touchActive = true
-        lastTouchStart = os.clock()
+        -- Arm the guard for the next actual camera movement after re-touch.
+        -- Zero/empty samples do not consume the guard.
+        suppressFirstDelta = true
     end
 end
 
@@ -93,15 +95,17 @@ local function attachHook()
     local success, err = pcall(function()
         oldFunction = hookfunction(targetFunction, function(...)
             local results = table.pack(oldFunction(...))
-            if enabled and touchActive then
+            if enabled and touchActive and suppressFirstDelta then
                 local delta = results[1]
-                if typeof(delta) == "Vector2" then
-                    local elapsed = os.clock() - lastTouchStart
-                    if elapsed >= 0 and elapsed < EASE_SECONDS then
-                        local alpha = math.clamp(elapsed / EASE_SECONDS, 0, 1)
-                        local scale = MIN_SCALE + (1 - MIN_SCALE) * alpha
-                        results[1] = delta * scale
-                    end
+                if typeof(delta) == "Vector2" and delta.Magnitude > 0.0001 then
+                    -- Drop only the first non-zero rotation sample after a new touch.
+                    -- This targets a possible re-touch spike without changing sensitivity
+                    -- or smoothing every camera movement.
+                    lastSuppressedMagnitude = delta.Magnitude
+                    suppressedDeltaCount = suppressedDeltaCount + 1
+                    results[1] = Vector2.zero
+                    suppressFirstDelta = false
+                    log("Suppressed first re-touch rotation sample; magnitude:", lastSuppressedMagnitude)
                 end
             end
             return table.unpack(results, 1, results.n)
@@ -114,7 +118,7 @@ local function attachHook()
     end
 
     hooked = true
-    log("Camera rotation hook installed. Re-touch easing:", EASE_SECONDS, "seconds.")
+    log("Camera rotation hook installed. First non-zero re-touch delta guard is armed per touch.")
     return true
 end
 
@@ -188,9 +192,11 @@ pcall(function()
             "Hook instalado: " .. tostring(hooked),
             "Script ativo: " .. tostring(enabled),
             "Toque ativo no momento: " .. tostring(touchActive),
-            "Tempo de easing: " .. tostring(EASE_SECONDS) .. " s",
-            "Escala mínima: " .. tostring(MIN_SCALE),
-            "Observação: o script não mantém um toque físico contínuo e não garante preservar o momentum do trimp."
+            "Modo: suprime apenas a primeira amostra de rotação não-zero após retocar",
+            "Amostras suprimidas: " .. tostring(suppressedDeltaCount),
+            "Magnitude da última amostra suprimida: " .. tostring(lastSuppressedMagnitude),
+            "Proteção armada para próximo delta: " .. tostring(suppressFirstDelta),
+            "Observação: teste experimental; não altera a sensibilidade nem garante preservar o momentum do trimp."
         }, "\\n")
 
         local copied = false
